@@ -9,19 +9,19 @@ export default class DeterministicFiniteStateMachine {
   }
 
   alphabet() {
-    return new Set(
-      Object.values(this.transitions)
-      .map(stateTransitions => Object.keys(stateTransitions))
-      .reduce((allSymbols, symbols) => [...allSymbols, ...symbols], [])
-    );
+    const alphabet = new Set();
+    
+    for(const [state, desc] of Object.entries(this.transitions)) {
+      for(const symbol of Object.keys(desc)) {
+        alphabet.add(symbol);
+      }
+    }
+
+    return alphabet.values();
   }
 
   states() {
-    return new Set(
-      Object.entries(this.transitions)
-      .map(([state, stateTransitions]) => [state, Object.values(stateTransitions)].flat())
-      .reduce((allStates, states) => [...allStates, ...states], [])
-    );
+    return new Set(Object.keys(this.transitions));
   }
 
   stateAccepted(state) {
@@ -101,7 +101,64 @@ export function minus(dfa1, dfa2) {
     (state1, state2) => dfa1.stateAccepted(state1) && !dfa2.stateAccepted(state2));
 }
 
-export function minimize(dfa) {
-  // TODO return a new minimized DFA
-  return dfa;
+export function minimize(dfa, groups = [ [...dfa.states()] ]) {
+	const behaviors = {};
+	
+	const findgroup = state => {
+		for(const group of groups){
+			if(group.includes(state)) return group;
+		}
+	};
+	
+	const behaviorkey = state =>{
+		let behaviorstring = `accepted=${dfa.stateAccepted(state)}`;
+		for (const symbol of dfa.alphabet()){
+			const nextState = dfa.transition(state, symbol);
+			const group = findgroup(nextState)
+			behaviorstring = `${behaviorstring},${symbol}=${group.join('-')}`;
+		}
+		return behaviorstring
+	};
+	
+	for (const state of dfa.states()){
+		const key = behaviorkey(state);
+		
+		if(!behaviors[key]) behaviors[key] = [];
+		behaviors[key].push(state);
+	}
+	
+	const newgroups = Object.values(behaviors);
+	if(newgroups.length === groups.length){
+		const transitions = {};
+		const acceptStates = [];
+		
+		const needstransitions = [findgroup(dfa.startState)];
+		
+		while(needstransitions.length > 0){
+			const group = needstransitions.pop();
+			
+			const state = group.join('-');
+			
+			if(dfa.stateAccepted(group[0])) acceptStates.push(state);
+			
+			transitions[state] = {};
+			
+			for(const symbol of dfa.alphabet()){
+				const nextState = dfa.transition(group[0], symbol);
+				const nextstategroup = findgroup(nextState);
+				
+				const newnextstate = nextstategroup.join('-');
+				
+				transitions[state][symbol] = newnextstate;
+				
+				if(!transitions[newnextstate]) needstransitions.push(nextstategroup);
+				
+			}
+		}
+		const startState = findgroup(dfa.startState).join('-');
+		
+		return new DeterministicFiniteStateMachine({transitions, startState, acceptStates});
+	} else {
+		return minimize(dfa, newgroups)
+	}
 }
