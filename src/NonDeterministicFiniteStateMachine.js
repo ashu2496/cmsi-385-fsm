@@ -24,9 +24,13 @@ export default class NonDeterministicFiniteStateMachine extends DeterministicFin
     let nextstates = [];
 	nextstates.push(state);
 	let token = string.charAt(0);
+	
+	//loop for iterating through each token of string
 	for (let i = 0; i < (string.length) ; i++){
 		
 		token = string.charAt(i);
+		
+		//loop for adding possble states after lamda transition
 		let j = 0;
 		while(j < (nextstates.length)){
 			if(this.transition(nextstates[j],[[LAMBDA]])!= undefined){
@@ -38,6 +42,8 @@ export default class NonDeterministicFiniteStateMachine extends DeterministicFin
 			}
 			j = j + 1;
 		}
+		
+		//loop for finding possible next states with token transition
 		let newnextstates = [];
 		for (let j = 0; j < (nextstates.length); j++){
 			if((this.transition(nextstates[j],token)) != undefined){
@@ -49,7 +55,11 @@ export default class NonDeterministicFiniteStateMachine extends DeterministicFin
 		nextstates = newnextstates;
 	}
 	let accepted = 0;
+	
+	// iterating through possible next tstes after final token transition
 	for (let  i = 0; i < nextstates.length ;i++){
+		
+		// adding lamda transition possible states
 		let j = 0;
 		while(j < (nextstates.length)){
 			if(this.transition(nextstates[j],[[LAMBDA]])!= undefined){
@@ -61,6 +71,8 @@ export default class NonDeterministicFiniteStateMachine extends DeterministicFin
 			}
 			j = j + 1;
 		}
+		
+		//checking whether any state is in accpt states
 		if (this.acceptStates.includes(nextstates[i])){
 			accepted = 1;
 		}
