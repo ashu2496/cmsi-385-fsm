@@ -36,15 +36,31 @@ export default class DeterministicFiniteStateMachine {
     if(!this.transitions[state]) return;
     return this.transitions[state][symbol];
   }
-
-  accepts(string, state = this.startState) {
-    const nextState = this.transition(state, string.charAt(0));
-    return (string.length === 0) ? this.stateAccepted(state) :
-                                   this.accepts(string.substr(1), nextState);
+  checkaccept(state)
+  {
+	  let a = 0;
+	  for(let i=0;i<this.acceptStates.length;i++){
+		  if(this.acceptStates[i]==state)
+		  {
+			  a=1;
+		  }
+	  }
+	  return a==1;
   }
 
+  accepts(string, state = this.startState) {
+	  let trace = string+"\n\n";
+		let currentstate = state;
+		let token = string.charAt(0);
+		for (let i = 0; i < (string.length); i++)
+		{
+			token = string.charAt(i);
+			currentstate = this.transition(currentstate,token);
+			trace = trace.concat(currentstate+"\n");
+		}
+		return this.checkaccept(currentstate);//this.acceptStates.includes(currentstate);
+	}
 }
-
 /**
  *
  */

@@ -1,5 +1,5 @@
 import NonDeterministicFiniteStateMachine, { LAMBDA } from './NonDeterministicFiniteStateMachine';
-
+import DeterministicFiniteStateMachine from './DeterministicFiniteStateMachine';
 const tests = {
   divisibleBy4: {
     description: {
@@ -92,7 +92,6 @@ describe('examples', () => {
       test('accepts / rejects', () => {
         const { description, tests: { accepts, rejects } } = desc;
         const fsm = new NonDeterministicFiniteStateMachine(description);
-
         for (const string of accepts) {
           expect(`${string}: ${fsm.accepts(string)}`).toEqual(`${string}: true`);
         }
@@ -102,6 +101,18 @@ debugger
           expect(`${string}: ${fsm.accepts(string)}`).toEqual(`${string}: false`);
         }
       });
+	  
+	  test('NFA to DFA', () => {
+        const { description, tests: { accepts, rejects } } = desc;
+		const fsm = new NonDeterministicFiniteStateMachine(description);
+		const dfa = new DeterministicFiniteStateMachine(fsm.toDFA(fsm));
+		for(const string of accepts){
+			expect(`${string}: ${dfa.accepts(string)}`).toEqual(`${string}: true`);
+		}
+		for(const string of rejects){
+			expect(`${string}: ${dfa.accepts(string)}`).toEqual(`${string}: false`);
+		}
+	  });
     });
   }
 });
